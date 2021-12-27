@@ -89,7 +89,7 @@ Cl.mediator = new Mediator();
 
             // timeout is needed to wait until table row has class selected.
             setTimeout(function () {
-                if (navigatorTable.hasClass('selected')) {
+                if (navigatorTable.hasClass('grp-selected')) {
                     actionList.addClass('action-selected');
                 }
             }, 100);
@@ -97,7 +97,7 @@ Cl.mediator = new Mediator();
             actionSelect.on('change', function () {
                 // setTimeout makes sure that change event fires before click event which is reliable to admin
                 setTimeout(function () {
-                    if (navigatorTable.hasClass('selected')) {
+                    if (navigatorTable.hasClass('grp-selected')) {
                         actionList.addClass('action-selected');
                     } else {
                         actionList.removeClass('action-selected');
@@ -129,7 +129,7 @@ Cl.mediator = new Mediator();
                         actionButton.show();
                         actionButton.on('click', function (e) {
                             e.preventDefault();
-                            if (navigatorTable.hasClass('selected')) {
+                            if (navigatorTable.hasClass('grp-selected')) {
                                 actionsSelect.val(optionValue).prop('selected', true);
                                 actionsGo.trigger('click');
                             }
@@ -164,7 +164,7 @@ Cl.mediator = new Mediator();
             });
 
             actionsMenu.on('click', function (e) {
-                if (!navigatorTable.hasClass('selected')) {
+                if (!navigatorTable.hasClass('grp-selected')) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
