@@ -1,5 +1,4 @@
 import os
-from unittest import skipIf
 
 import django
 import django.core.files
@@ -11,19 +10,17 @@ from django.forms.models import model_to_dict as model_to_dict_django
 from django.test import TestCase
 from django.urls import reverse
 
-from tests.helpers import (
-    SettingsOverride, create_folder_structure, create_image, create_superuser,
-)
-from tests.utils.extended_app.models import ExtImage, Video
-
 from filer import settings as filer_settings
 from filer.admin.folderadmin import FolderAdmin
 from filer.models.filemodels import File
 from filer.models.foldermodels import Folder, FolderPermission
 from filer.models.virtualitems import FolderRoot
 from filer.settings import FILER_IMAGE_MODEL
+from filer.templatetags.filer_admin_tags import file_icon_url
 from filer.thumbnail_processors import normalize_subject_location
 from filer.utils.loader import load_model
+from tests.helpers import SettingsOverride, create_folder_structure, create_image, create_superuser
+from tests.utils.extended_app.models import ExtImage, Video
 
 
 Image = load_model(FILER_IMAGE_MODEL)
@@ -154,8 +151,6 @@ class FilerFolderAdminUrlsTests(TestCase):
         folder = Folder.objects.get(pk=folder.pk)
         self.assertEqual(folder.owner.pk, another_superuser.pk)
 
-    @skipIf(django.get_version() < '1.7',
-            'admin context not supported in django < 1.7')
     def test_folder_admin_uses_admin_context(self):
         folder = Folder.objects.create(name='foo')
         url = reverse('admin:filer-directory_listing', kwargs={
@@ -472,6 +467,16 @@ class FilerClipboardAdminUrlsTests(TestCase):
         self.assertContains(response, NO_PERMISSIONS_FOR_FOLDER)
         self.assertEqual(Image.objects.count(), 0)
 
+    def test_templatetag_file_icon_url(self):
+        filename = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'invalid.svg')
+        with open(filename, 'wb') as fh:
+            fh.write(b'<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" height="0" width="0"><circle cx="0" cy="0" r="0" stroke="black" stroke-width="3" fill="red" /></svg>')
+        file_obj = django.core.files.File(open(filename, 'rb'), name=filename)
+        image_obj = Image.objects.create(owner=self.superuser, original_filename=self.image_name, file=file_obj, mime_type='image/svg+xml')
+        image_obj.save()
+        url = file_icon_url(image_obj)
+        self.assertEqual(url, '/static/filer/icons/file\\u002Dunknown.svg')
+
 
 class BulkOperationsMixin:
     def setUp(self):
@@ -535,7 +540,7 @@ class FilerBulkOperationsTests(BulkOperationsMixin, TestCase):
         url = reverse('admin:filer-directory_listing', kwargs={
             'folder_id': self.src_folder.id,
         })
-        response = self.client.post(url, {  # noqa
+        response = self.client.post(url, {
             'action': 'move_files_and_folders',
             'post': 'yes',
             'destination': self.dst_folder.id,
@@ -687,7 +692,7 @@ class FilerBulkOperationsTests(BulkOperationsMixin, TestCase):
             # files inside this folder, non-recursive
             files = File.objects.filter(folder=folder_obj)
         else:
-            raise(ValueError('file_obj or folder_obj is required'))
+            raise ValueError('file_obj or folder_obj is required')
 
         response = self.client.post(url, {
             'action': 'rename_files',
