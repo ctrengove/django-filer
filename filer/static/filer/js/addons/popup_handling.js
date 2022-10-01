@@ -12,6 +12,7 @@ if (django.jQuery) {
     function windowname_to_id(text) {
         text = text.replace(/__dot__/g, '.');
         text = text.replace(/__dash__/g, '-');
+        text = text.replace(/__\d+$/, '');
         return text;
     }
 
